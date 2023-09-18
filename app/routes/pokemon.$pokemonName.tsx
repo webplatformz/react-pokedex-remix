@@ -1,15 +1,25 @@
-import { useParams } from "@remix-run/react";
-import { pokeDetails } from "~/mock-data/details";
+import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
+import { fetcher } from "~/api/fetcher";
+import type { PokemonDetailDto } from "~/api/pokeApi";
+
+export async function loader({ params }: LoaderFunctionArgs) {
+  const pokemonDetail = await fetcher<PokemonDetailDto>(
+    `https://pokeapi.co/api/v2/pokemon/${params.pokemonName}`,
+  );
+
+  return json({
+    name: pokemonDetail.name,
+    imageUrl: pokemonDetail.sprites.front_shiny,
+  });
+}
 
 export default function DetailPage() {
-  const { pokemonName } = useParams<"pokemonName">();
-
-  const pokemon = pokeDetails.find((p) => p.name === pokemonName);
-
+  const pokemonDetail = useLoaderData<typeof loader>();
   return (
     <div>
-      <span>{pokemonName}</span>
-      <img src={pokemon?.sprites.front_shiny} alt={pokemonName} />
+      <span>{pokemonDetail.name}</span>
+      <img src={pokemonDetail.imageUrl} alt={pokemonDetail.name} />
     </div>
   );
 }
